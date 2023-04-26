@@ -27,7 +27,7 @@ func New() ObjectID {
 	str := generateRandomByte(4)
 	copy(b, str)
 
-	now := uint64(time.Now().Nanosecond())
+	now := uint64(time.Now().UnixNano())
 	binary.BigEndian.PutUint64(b[4:], now)
 	return b
 }
