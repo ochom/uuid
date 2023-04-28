@@ -3,37 +3,37 @@ package uuid
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"sync/atomic"
 	"time"
 )
 
-const (
-	// ShortUID ...
-	ShortUID = 12 // generate 24 characters long uuid
-	// LongUID ...
-	LongUID = 18 // generates 36 characters long uuid
-)
+var objectIDCounter = readRandomUint32()
 
 // ObjectID ...
-type ObjectID []byte
-
-// UID ...
-type UID struct {
-	objectID ObjectID
-}
+type ObjectID [12]byte
 
 // New ...
 func New() ObjectID {
-	b := make([]byte, ShortUID)
-	str := generateRandomByte(4)
-	copy(b, str)
+	var b [12]byte
+
+	// Convert the time to a byte array
+	binary.BigEndian.PutUint32(b[0:4], uint32(time.Now().Unix()))
+
+	// Generate 5 random bytes
+	unique := generateRandomByte()
+	copy(b[4:9], unique[:])
 
 	now := uint64(time.Now().UnixNano())
 	binary.BigEndian.PutUint64(b[4:], now)
+
+	// Generate 3 random bytes with counter
+	putUint32(b[9:12], atomic.AddUint32(&objectIDCounter, 1))
+
 	return b
 }
 
 // NewString ...
 func NewString() string {
 	id := New()
-	return hex.EncodeToString(id)
+	return hex.EncodeToString(id[:])
 }
